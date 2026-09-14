@@ -1196,8 +1196,8 @@ class MainApp(ctk.CTk):
         self._set_taskbar_icon()
 
         # 窗口尺寸 & 居中（适配屏幕高度，留 60px 给任务栏）
-        W = 960
-        H = 720  # 从 820 改为 720，适配 768px 低分辨率屏幕
+        W = 1040
+        H = 760
         self.update_idletasks()
         sx = self.winfo_screenwidth()
         sy = self.winfo_screenheight()
@@ -1208,7 +1208,7 @@ class MainApp(ctk.CTk):
         x = max(0, (sx - W) // 2)
         y = max(0, (sy - H) // 2 - 10)
         self.geometry(f"{W}x{H}+{x}+{y}")
-        self.minsize(860, 600)
+        self.minsize(940, 640)
 
         # 登录页 & 主页
         self.login_frame: Optional[LoginFrame] = None
@@ -1336,55 +1336,55 @@ class MainApp(ctk.CTk):
         m.grid_rowconfigure(1, weight=1)   # 中间内容区可伸缩
         m.grid_columnconfigure(0, weight=1)
 
-        # ── 1. 顶部标题栏（固定 56px） ──
-        hdr = ctk.CTkFrame(m, fg_color=BG_CARD, corner_radius=0, height=56)
+        # ── 1. 顶部标题栏（固定 64px） ──
+        hdr = ctk.CTkFrame(m, fg_color=BG_CARD, corner_radius=0, height=64)
         hdr.grid(row=0, column=0, sticky="ew")
         hdr.grid_propagate(False)
         hdr.grid_columnconfigure(1, weight=1)
 
         # 左侧 Logo（用 CTkImage）
-        logo_pil = make_logo_image(34)
+        logo_pil = make_logo_image(40)
         if logo_pil is not None:
             self._hdr_logo_ctk = ctk.CTkImage(
                 light_image=logo_pil, dark_image=logo_pil,
-                size=(34, 34))
+                size=(40, 40))
             ctk.CTkLabel(hdr, image=self._hdr_logo_ctk, text="",
                          fg_color="transparent").grid(
-                row=0, column=0, padx=(14, 8), pady=10, sticky="w")
+                row=0, column=0, padx=(16, 10), pady=12, sticky="w")
         else:
             logo_box = ctk.CTkFrame(hdr, fg_color=BTN_PRIMARY_S, corner_radius=8,
-                                    width=34, height=34)
-            logo_box.grid(row=0, column=0, padx=(14, 8), pady=10)
+                                    width=40, height=40)
+            logo_box.grid(row=0, column=0, padx=(16, 10), pady=12)
             logo_box.pack_propagate(False)
             ctk.CTkLabel(logo_box, text="T",
-                         font=ctk.CTkFont(family=FONT_UI, size=16, weight="bold"),
+                         font=ctk.CTkFont(family=FONT_UI, size=18, weight="bold"),
                          text_color=FG_WHITE).place(relx=0.5, rely=0.5, anchor="center")
 
         # 标题文字（column=1，weight=1 拉伸）
         title_col = ctk.CTkFrame(hdr, fg_color="transparent")
-        title_col.grid(row=0, column=1, sticky="ew", pady=10)
+        title_col.grid(row=0, column=1, sticky="ew", pady=12)
         title_col.grid_columnconfigure(0, weight=1)
         ctk.CTkLabel(title_col, text="trae助手reset工具",
-                     font=ctk.CTkFont(family=FONT_UI, size=14, weight="bold"),
+                     font=ctk.CTkFont(family=FONT_UI, size=16, weight="bold"),
                      text_color=FG).grid(row=0, column=0, sticky="w", pady=(0, 0))
         ctk.CTkLabel(title_col,
                      text=f"{APP_AUTHOR} · {APP_WEBSITE}",
-                     font=ctk.CTkFont(family=FONT_UI, size=10),
+                     font=ctk.CTkFont(family=FONT_UI, size=11),
                      text_color=FG_DIM).grid(row=1, column=0, sticky="w")
 
         # 右侧徽章（column=2）
         badge_col = ctk.CTkFrame(hdr, fg_color="transparent")
-        badge_col.grid(row=0, column=2, padx=(0, 14), pady=10, sticky="e")
+        badge_col.grid(row=0, column=2, padx=(0, 16), pady=12, sticky="e")
         self.status_badge = ctk.CTkLabel(
             badge_col, text="● 未登录",
-            font=ctk.CTkFont(family=FONT_UI, size=10, weight="bold"),
+            font=ctk.CTkFont(family=FONT_UI, size=11, weight="bold"),
             fg_color=BADGE_ERR_BG, text_color=BADGE_ERR_FG,
             corner_radius=999, padx=10, pady=3)
         self.status_badge.pack(side="left", padx=(0, 6))
         # 只显示一个版本徽章，避免重复
         self.version_badge = ctk.CTkLabel(
             badge_col, text=f"v{VERSION}",
-            font=ctk.CTkFont(family=FONT_UI, size=10, weight="bold"),
+            font=ctk.CTkFont(family=FONT_UI, size=11, weight="bold"),
             fg_color=BADGE_INFO_BG, text_color=BADGE_INFO_FG,
             corner_radius=999, padx=10, pady=3)
         self.version_badge.pack(side="left")
@@ -1420,17 +1420,17 @@ class MainApp(ctk.CTk):
         # 紧凑警示条（独立一行）
         warn = ctk.CTkFrame(content, fg_color=WARN_BG, corner_radius=6,
                             border_width=0)
-        warn.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(6, 6))
+        warn.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(4, 4))
         # 橙色左边框
         bar = ctk.CTkFrame(warn, fg_color=WARN_BORDER, width=3,
                           corner_radius=0)
         bar.pack(side="left", fill="y")
         ctk.CTkLabel(
             warn,
-            text="  注意: 本工具仅重置本地 Trae 数据, 服务端额度由 Trae 控制。",
-            font=ctk.CTkFont(family=FONT_UI, size=11),
+            text="  注意：本工具需要更换 IP 重置网络，使用工具后请重新申请登录新账户",
+            font=ctk.CTkFont(family=FONT_UI, size=12),
             text_color=WARN_TEXT, anchor="w"
-        ).pack(side="left", fill="x", padx=6, pady=4)
+        ).pack(side="left", fill="x", padx=6, pady=3)
 
         # ── 2b. 左列：数据目录 + 当前状态 ──
         left_col = ctk.CTkFrame(content, fg_color="transparent")
@@ -1438,84 +1438,82 @@ class MainApp(ctk.CTk):
         left_col.grid_rowconfigure(1, weight=1)
         left_col.grid_columnconfigure(0, weight=1)
 
-        # 左-1: 数据目录卡片（更紧凑）
+        # 左-1: 数据目录卡片
         dir_card = ctk.CTkFrame(left_col, fg_color=BG_CARD, corner_radius=8,
                                 border_width=1, border_color=BORDER)
         dir_card.grid(row=0, column=0, sticky="ew", pady=(0, 6))
         dir_inner = ctk.CTkFrame(dir_card, fg_color="transparent")
-        dir_inner.pack(fill="x", padx=12, pady=8)
+        dir_inner.pack(fill="x", padx=14, pady=10)
 
         dir_title_row = ctk.CTkFrame(dir_inner, fg_color="transparent")
-        dir_title_row.pack(fill="x", pady=(0, 6))
+        dir_title_row.pack(fill="x", pady=(0, 8))
         ctk.CTkLabel(dir_title_row, text="数据目录",
-                     font=ctk.CTkFont(family=FONT_UI, size=12, weight="bold"),
+                     font=ctk.CTkFont(family=FONT_UI, size=14, weight="bold"),
                      text_color=FG).pack(side="left")
 
         dir_row = ctk.CTkFrame(dir_inner, fg_color="transparent")
         dir_row.pack(fill="x")
         self.dir_combobox = ctk.CTkComboBox(
-            dir_row, values=["点击右侧刷新"], width=240,
-            font=ctk.CTkFont(family=FONT_MONO, size=11),
-            dropdown_font=ctk.CTkFont(family=FONT_MONO, size=11),
+            dir_row, values=["点击右侧刷新"], width=260,
+            font=ctk.CTkFont(family=FONT_MONO, size=12),
+            dropdown_font=ctk.CTkFont(family=FONT_MONO, size=12),
             fg_color=BG_INPUT, text_color=FG, border_color=BORDER,
             button_color=BTN_PRIMARY_S, button_hover_color=BTN_PRIMARY_E,
             command=self._on_combobox_select)
-        self.dir_combobox.pack(side="left", padx=(0, 4))
+        self.dir_combobox.pack(side="left", padx=(0, 6))
         self.dir_combobox.set("点击「自动检测」")
 
-        ctk.CTkButton(dir_row, text="自动检测", width=66, height=26,
-                      font=ctk.CTkFont(family=FONT_UI, size=11),
+        ctk.CTkButton(dir_row, text="自动检测", width=78, height=30,
+                      font=ctk.CTkFont(family=FONT_UI, size=12),
                       fg_color=BTN_PRIMARY_S, hover_color=BTN_PRIMARY_E,
                       text_color=FG_WHITE, corner_radius=6,
-                      command=self._on_auto_detect).pack(side="left", padx=(0, 4))
-        ctk.CTkButton(dir_row, text="手动", width=46, height=26,
-                      font=ctk.CTkFont(family=FONT_UI, size=11),
+                      command=self._on_auto_detect).pack(side="left", padx=(0, 6))
+        ctk.CTkButton(dir_row, text="手动", width=54, height=30,
+                      font=ctk.CTkFont(family=FONT_UI, size=12),
                       fg_color=BLUE, hover_color=BLUE_H,
                       text_color=FG_WHITE, corner_radius=6,
-                      command=self._on_browse).pack(side="left", padx=(0, 4))
-        ctk.CTkButton(dir_row, text="恢复", width=46, height=26,
-                      font=ctk.CTkFont(family=FONT_UI, size=11),
+                      command=self._on_browse).pack(side="left", padx=(0, 6))
+        ctk.CTkButton(dir_row, text="恢复", width=54, height=30,
+                      font=ctk.CTkFont(family=FONT_UI, size=12),
                       fg_color=GHOST, hover_color=GHOST_H,
                       text_color=FG_BODY, corner_radius=5,
                       command=self._on_restore).pack(side="left")
 
         self.dir_label = ctk.CTkLabel(
             dir_inner, text="未选择 — 请点击「自动检测」",
-            font=ctk.CTkFont(family=FONT_MONO, size=10), text_color=FG_DIM,
-            anchor="w", wraplength=420)
-        self.dir_label.pack(anchor="w", pady=(6, 0))
+            font=ctk.CTkFont(family=FONT_MONO, size=11), text_color=FG_DIM,
+            anchor="w", wraplength=460)
+        self.dir_label.pack(anchor="w", pady=(8, 0))
 
         # 左-2: 当前状态卡片
         sc = ctk.CTkFrame(left_col, fg_color=BG_CARD, corner_radius=8,
                          border_width=1, border_color=BORDER)
         sc.grid(row=1, column=0, sticky="nsew")
         si = ctk.CTkFrame(sc, fg_color="transparent")
-        si.pack(fill="both", expand=True, padx=12, pady=8)
+        si.pack(fill="both", expand=True, padx=14, pady=10)
 
         st_top = ctk.CTkFrame(si, fg_color="transparent")
-        st_top.pack(fill="x", pady=(0, 4))
+        st_top.pack(fill="x", pady=(0, 6))
         ctk.CTkLabel(st_top, text="当前状态",
-                     font=ctk.CTkFont(family=FONT_UI, size=12, weight="bold"),
+                     font=ctk.CTkFont(family=FONT_UI, size=14, weight="bold"),
                      text_color=FG).pack(side="left")
-        ctk.CTkButton(st_top, text="刷新", width=44, height=22,
-                      font=ctk.CTkFont(family=FONT_UI, size=10),
+        ctk.CTkButton(st_top, text="刷新", width=54, height=26,
+                      font=ctk.CTkFont(family=FONT_UI, size=11),
                       fg_color=GHOST, hover_color=GHOST_H,
                       text_color=FG_BODY, corner_radius=4,
                       command=self._on_refresh).pack(side="right")
 
         self.info_labels = {}
-        for key, txt in [("accounts", "检测到的账号"),
-                         ("detail",   "账号信息"),
-                         ("mid",      "Machine ID"),
-                         ("did",      "Dev Device ID")]:
+        for key, txt in [("mid", "Machine ID"),
+                         ("did", "Dev Device ID")]:
             row = ctk.CTkFrame(si, fg_color="transparent")
-            row.pack(fill="x", pady=2)
-            ctk.CTkLabel(row, text=f"{txt}:", width=100, anchor="w",
-                         font=ctk.CTkFont(family=FONT_UI, size=11),
+            row.pack(fill="x", pady=4)
+            ctk.CTkLabel(row, text=f"{txt}:", width=120, anchor="w",
+                         font=ctk.CTkFont(family=FONT_UI, size=13),
                          text_color=FG_DIM).pack(side="left")
             v = ctk.CTkLabel(row, text="-", anchor="w",
-                             font=ctk.CTkFont(family=FONT_MONO, size=11),
-                             text_color=FG_LINK, wraplength=300)
+                             font=ctk.CTkFont(family=FONT_MONO, size=13),
+                             text_color=FG_LINK, wraplength=360)
             v.pack(side="left", fill="x", expand=True)
             self.info_labels[key] = v
 
@@ -1532,24 +1530,24 @@ class MainApp(ctk.CTk):
                          border_width=1, border_color=BORDER)
         ac.grid(row=0, column=0, sticky="ew", pady=(0, 6))
         ai = ctk.CTkFrame(ac, fg_color="transparent")
-        ai.pack(fill="x", padx=12, pady=8)
+        ai.pack(fill="x", padx=14, pady=10)
 
         ctk.CTkLabel(ai, text="操作",
-                     font=ctk.CTkFont(family=FONT_UI, size=12, weight="bold"),
-                     text_color=FG).pack(anchor="w", pady=(0, 2))
+                     font=ctk.CTkFont(family=FONT_UI, size=14, weight="bold"),
+                     text_color=FG).pack(anchor="w", pady=(0, 4))
         ctk.CTkLabel(ai,
                      text="遇到「设备数量已达上限」？点「一键重置」即可",
-                     font=ctk.CTkFont(family=FONT_UI, size=11),
-                     text_color=FG_DIM).pack(anchor="w", pady=(0, 8))
+                     font=ctk.CTkFont(family=FONT_UI, size=12),
+                     text_color=FG_DIM).pack(anchor="w", pady=(0, 10))
 
         self._btn_oneclick = ctk.CTkButton(
             ai, text="一键重置  —  清除账号 + 重置设备 ID",
-            height=42,
-            font=ctk.CTkFont(family=FONT_UI, size=13, weight="bold"),
+            height=48,
+            font=ctk.CTkFont(family=FONT_UI, size=14, weight="bold"),
             fg_color=BTN_PRIMARY_S, hover_color=BTN_PRIMARY_E,
             text_color=FG_WHITE, corner_radius=8,
             command=self._on_oneclick)
-        self._btn_oneclick.pack(fill="x", pady=(0, 8))
+        self._btn_oneclick.pack(fill="x", pady=(0, 10))
 
         # 次要操作行
         sub_row = ctk.CTkFrame(ai, fg_color="transparent")
@@ -1559,8 +1557,8 @@ class MainApp(ctk.CTk):
             ("清除所有账号", RED,   RED_H,   self._on_clear),
             ("重置设备 ID",  AMBER, AMBER_H, self._on_reset),
         ]:
-            b = ctk.CTkButton(sub_row, text=txt, height=32,
-                              font=ctk.CTkFont(family=FONT_UI, size=12),
+            b = ctk.CTkButton(sub_row, text=txt, height=36,
+                              font=ctk.CTkFont(family=FONT_UI, size=13),
                               fg_color=c, hover_color=h,
                               text_color=FG_WHITE, corner_radius=7,
                               command=cmd)
@@ -1588,10 +1586,10 @@ class MainApp(ctk.CTk):
                           border_width=1, border_color=BORDER)
         adv.grid(row=1, column=0, sticky="nsew")
         adv_i = ctk.CTkFrame(adv, fg_color="transparent")
-        adv_i.pack(fill="both", expand=True, padx=12, pady=8)
+        adv_i.pack(fill="both", expand=True, padx=14, pady=10)
         ctk.CTkLabel(adv_i, text="高级选项",
-                     font=ctk.CTkFont(family=FONT_UI, size=12, weight="bold"),
-                     text_color=FG).pack(anchor="w", pady=(0, 6))
+                     font=ctk.CTkFont(family=FONT_UI, size=14, weight="bold"),
+                     text_color=FG).pack(anchor="w", pady=(0, 8))
 
         self.opt_readonly = ctk.BooleanVar(value=self.store.get_config("opt_readonly", True))
         self.opt_kill = ctk.BooleanVar(value=self.store.get_config("opt_kill", True))
@@ -1607,45 +1605,45 @@ class MainApp(ctk.CTk):
              "删除 trae-updater 目录"),
         ]:
             row = ctk.CTkFrame(adv_i, fg_color="transparent")
-            row.pack(fill="x", pady=2)
+            row.pack(fill="x", pady=4)
             ctk.CTkCheckBox(row, text=text, variable=var,
-                            font=ctk.CTkFont(family=FONT_UI, size=11),
+                            font=ctk.CTkFont(family=FONT_UI, size=12),
                             text_color=FG_BODY, fg_color=BTN_PRIMARY_S,
                             hover_color=BTN_PRIMARY_E).pack(side="left")
             ctk.CTkLabel(row, text=desc,
-                        font=ctk.CTkFont(family=FONT_UI, size=9),
-                        text_color=FG_DIM).pack(side="left", padx=(6, 0))
+                        font=ctk.CTkFont(family=FONT_UI, size=10),
+                        text_color=FG_DIM).pack(side="left", padx=(8, 0))
 
         # ── 2d. 底部日志区（横跨 2 列，高度自适应） ──
         lc = ctk.CTkFrame(content, fg_color=BG_CARD, corner_radius=8,
                           border_width=1, border_color=BORDER)
         lc.grid(row=3, column=0, columnspan=2, sticky="nsew", pady=(6, 0))
         li = ctk.CTkFrame(lc, fg_color="transparent")
-        li.pack(fill="both", expand=True, padx=12, pady=8)
+        li.pack(fill="both", expand=True, padx=14, pady=10)
 
         log_top = ctk.CTkFrame(li, fg_color="transparent")
-        log_top.pack(fill="x", pady=(0, 4))
+        log_top.pack(fill="x", pady=(0, 6))
         ctk.CTkLabel(log_top, text="操作日志",
-                     font=ctk.CTkFont(family=FONT_UI, size=12, weight="bold"),
+                     font=ctk.CTkFont(family=FONT_UI, size=14, weight="bold"),
                      text_color=FG).pack(side="left")
-        ctk.CTkButton(log_top, text="复制", width=44, height=22,
-                      font=ctk.CTkFont(family=FONT_UI, size=10),
+        ctk.CTkButton(log_top, text="复制", width=54, height=26,
+                      font=ctk.CTkFont(family=FONT_UI, size=11),
                       fg_color=GHOST, hover_color=GHOST_H,
                       text_color=FG_BODY, corner_radius=4,
-                      command=self._copy_log).pack(side="right", padx=(3, 0))
-        ctk.CTkButton(log_top, text="清空", width=44, height=22,
-                      font=ctk.CTkFont(family=FONT_UI, size=10),
+                      command=self._copy_log).pack(side="right", padx=(4, 0))
+        ctk.CTkButton(log_top, text="清空", width=54, height=26,
+                      font=ctk.CTkFont(family=FONT_UI, size=11),
                       fg_color=GHOST, hover_color=GHOST_H,
                       text_color=FG_BODY, corner_radius=4,
-                      command=self._clear_log).pack(side="right", padx=(3, 0))
-        ctk.CTkButton(log_top, text="导出", width=44, height=22,
-                      font=ctk.CTkFont(family=FONT_UI, size=10),
+                      command=self._clear_log).pack(side="right", padx=(4, 0))
+        ctk.CTkButton(log_top, text="导出", width=54, height=26,
+                      font=ctk.CTkFont(family=FONT_UI, size=11),
                       fg_color=GHOST, hover_color=GHOST_H,
                       text_color=FG_BODY, corner_radius=4,
-                      command=self._export_log).pack(side="right", padx=(3, 0))
+                      command=self._export_log).pack(side="right", padx=(4, 0))
 
         self.log_box = ctk.CTkTextbox(
-            li, font=ctk.CTkFont(family=FONT_MONO, size=11),
+            li, font=ctk.CTkFont(family=FONT_MONO, size=12),
             fg_color=BG_INPUT, text_color=FG_BODY,
             corner_radius=6, wrap="word", state="disabled",
             border_width=1, border_color=BORDER)
@@ -1846,14 +1844,10 @@ class MainApp(ctk.CTk):
                 self._log("请先选择数据目录", "warn")
             return
         s = get_status(self.current_dir)
-        n = len(s["accounts"])
-        self.info_labels["accounts"].configure(text=f"{n} 个")
-        self.info_labels["detail"].configure(
-            text=", ".join(s["accounts"]) if s["accounts"] else "无登录账号")
         self.info_labels["mid"].configure(text=s["machine_id"])
         self.info_labels["did"].configure(text=s["dev_device_id"])
         if not silent:
-            self._log("状态已刷新", "dim")
+            self._log(f"状态已刷新 · 账号数: {len(s['accounts'])}", "dim")
 
     def _check(self) -> bool:
         if not self.current_dir:
