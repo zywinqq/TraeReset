@@ -1421,17 +1421,18 @@ class MainApp(ctk.CTk):
         warn = ctk.CTkFrame(content, fg_color=WARN_BG, corner_radius=6,
                             border_width=0, height=50)
         warn.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(4, 4))
+        warn.pack_propagate(False)
         warn.grid_propagate(False)
         # 橙色左边框
         bar = ctk.CTkFrame(warn, fg_color=WARN_BORDER, width=3,
                           corner_radius=0)
-        bar.pack(side="left", fill="y")
+        bar.place(x=0, rely=0, relheight=1)
         ctk.CTkLabel(
             warn,
             text="  注意：本工具需要更换 IP 重置网络，使用工具后请重新申请登录新账户",
             font=ctk.CTkFont(family=FONT_UI, size=12),
             text_color=WARN_TEXT, anchor="w"
-        ).pack(side="left", fill="both", expand=True, padx=6, pady=3)
+        ).place(relx=0.02, rely=0.5, anchor="w")
 
         # ── 2b. 左列：数据目录 + 当前状态 ──
         left_col = ctk.CTkFrame(content, fg_color="transparent")
