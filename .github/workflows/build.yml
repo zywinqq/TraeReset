@@ -1,0 +1,89 @@
+name: Build & Release
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install nuitka customtkinter cryptography pystray Pillow
+
+      - name: Generate app icon
+        run: |
+          python -c "from PIL import Image; import sys; sys.path.insert(0,'.'); from trae_unlock import make_logo_image; img = make_logo_image(256); img.save('app_icon.png'); sizes=[(256,256),(128,128),(64,64),(48,48),(32,32),(16,16)]; img.convert('RGBA').save('app_icon.ico', format='ICO', sizes=sizes); print('icon generated')"
+
+      - name: Build with Nuitka
+        run: |
+          python -m nuitka --onefile --enable-plugin=tk-inter --include-package-data=customtkinter --include-package=customtkinter --include-package=cryptography --include-package=pystray --include-package=PIL --include-data-files=app_icon.ico=app_icon.ico --windows-console-mode=disable --windows-company-name="trae-assistant-reset" --windows-product-name="trae assistant reset tool" --windows-file-version=2026.9.14.0 --windows-product-version=2026.9.14.0 --windows-file-description="Trae IDE Device Limit Reset Tool" --windows-icon-from-ico=app_icon.ico --output-dir=build --output-filename=TraeReset.exe --assume-yes-for-downloads --remove-output trae_unlock.py
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TraeReset-Windows
+          path: build/TraeReset.exe
+
+      - name: Upload to Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/TraeReset.exe
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install pyinstaller customtkinter cryptography pystray Pillow dmgbuild
+
+      - name: Generate app icon
+        run: |
+          python -c "from PIL import Image; import sys; sys.path.insert(0,'.'); from trae_unlock import make_logo_image; img = make_logo_image(256); img.save('app_icon.png'); sizes=[(256,256),(128,128),(64,64),(48,48),(32,32),(16,16)]; img.convert('RGBA').save('app_icon.ico', format='ICO', sizes=sizes); print('icon generated')"
+          # 为 .icns 准备（macOS）
+          python -c "from PIL import Image; img = Image.open('app_icon.png').convert('RGBA'); img.save('app_icon.icns', format='ICNS')"
+
+      - name: Build .app with PyInstaller
+        run: |
+          pyinstaller --noconfirm --windowed --name "TraeReset" \
+            --collect-all customtkinter \
+            --icon app_icon.icns \
+            --osx-bundle-identifier "cc.se3.traereset" \
+            --add-data "app_icon.png:." \
+            trae_unlock.py
+
+      - name: Build .dmg with dmgbuild
+        run: |
+          dmgbuild \
+            --settings dmg_settings.py \
+            "TraeReset" \
+            dist/TraeReset-${{ github.event.release.tag_name || '20260914' }}.dmg
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TraeReset-macOS
+          path: dist/TraeReset-*.dmg
+
+      - name: Upload to Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/TraeReset-*.dmg
