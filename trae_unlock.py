@@ -1417,10 +1417,11 @@ class MainApp(ctk.CTk):
             card.grid(row=0, column=i, padx=(0 if i == 0 else 4, 4 if i == 3 else 0),
                       sticky="nsew")
 
-        # 紧凑警示条（独立一行）
+        # 警示条（固定 50px 高度）
         warn = ctk.CTkFrame(content, fg_color=WARN_BG, corner_radius=6,
-                            border_width=0)
+                            border_width=0, height=50)
         warn.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(4, 4))
+        warn.grid_propagate(False)
         # 橙色左边框
         bar = ctk.CTkFrame(warn, fg_color=WARN_BORDER, width=3,
                           corner_radius=0)
@@ -1430,7 +1431,7 @@ class MainApp(ctk.CTk):
             text="  注意：本工具需要更换 IP 重置网络，使用工具后请重新申请登录新账户",
             font=ctk.CTkFont(family=FONT_UI, size=12),
             text_color=WARN_TEXT, anchor="w"
-        ).pack(side="left", fill="x", padx=6, pady=3)
+        ).pack(side="left", fill="both", expand=True, padx=6, pady=3)
 
         # ── 2b. 左列：数据目录 + 当前状态 ──
         left_col = ctk.CTkFrame(content, fg_color="transparent")
