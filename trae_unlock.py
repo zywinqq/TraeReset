@@ -444,36 +444,66 @@ def is_valid_trae_dir(path: str) -> bool:
             or os.path.isfile(os.path.join(path, STORAGE_REL)))
 
 
-def auto_detect_trae_dirs() -> List[str]:
-    """自动检测可能的 Trae 数据目录"""
+# 三个版本对应的目录名（所有平台一致）
+TRAE_VARIANTS = {
+    "international": "Trae",        # Trae 国际版
+    "cn": "Trae CN",                # Trae CN 国内版
+    "solo": "TRAE SOLO CN",         # TraeSolo CN 个人版
+}
+
+
+def get_variant_dir_name(variant: str) -> str:
+    """根据版本 key 返回目录名"""
+    return TRAE_VARIANTS.get(variant, "Trae")
+
+
+def auto_detect_trae_dirs(variant: str = "international") -> List[str]:
+    """自动检测指定版本的 Trae 数据目录
+
+    Args:
+        variant: "international" | "cn" | "solo"
+    """
+    dir_name = get_variant_dir_name(variant)
     candidates = []
     if IS_WIN:
-        env_keys = ["APPDATA", "LOCALAPPDATA", "USERPROFILE"]
-        for key in env_keys:
-            base = os.environ.get(key)
-            if not base:
-                continue
-            for sub in ["Trae", os.path.join("Programs", "Trae"),
-                        os.path.join("AppData", "Roaming", "Trae")]:
-                p = os.path.join(base, sub)
-                if os.path.isdir(p) and is_valid_trae_dir(p):
-                    if p not in candidates:
-                        candidates.append(p)
+        appdata = os.environ.get("APPDATA", "")
+        local_appdata = os.environ.get("LOCALAPPDATA", "")
+        userprofile = os.environ.get("USERPROFILE", "")
+        # 1. %APPDATA%/<dir_name>  （最常见，主数据目录）
+        p = os.path.join(appdata, dir_name)
+        if os.path.isdir(p) and is_valid_trae_dir(p):
+            candidates.append(p)
+        # 2. %LOCALAPPDATA%/<dir_name>
+        p = os.path.join(local_appdata, dir_name)
+        if os.path.isdir(p) and is_valid_trae_dir(p):
+            if p not in candidates:
+                candidates.append(p)
+        # 3. %LOCALAPPDATA%/Programs/<dir_name>
+        p = os.path.join(local_appdata, "Programs", dir_name)
+        if os.path.isdir(p) and is_valid_trae_dir(p):
+            if p not in candidates:
+                candidates.append(p)
+        # 4. %USERPROFILE%/AppData/Roaming/<dir_name>（兜底）
+        p = os.path.join(userprofile, "AppData", "Roaming", dir_name)
+        if os.path.isdir(p) and is_valid_trae_dir(p):
+            if p not in candidates:
+                candidates.append(p)
     elif IS_MAC:
         base = os.path.expanduser("~")
-        for sub in [os.path.join("Library", "Application Support", "Trae")]:
-            p = os.path.join(base, sub)
-            if os.path.isdir(p) and is_valid_trae_dir(p):
+        # macOS: ~/Library/Application Support/<dir_name>
+        p = os.path.join(base, "Library", "Application Support", dir_name)
+        if os.path.isdir(p) and is_valid_trae_dir(p):
+            candidates.append(p)
+        # macOS: ~/.<dir_name>（旧版路径兜底）
+        p = os.path.join(base, "." + dir_name.replace(" ", "").lower())
+        if os.path.isdir(p) and is_valid_trae_dir(p):
+            if p not in candidates:
                 candidates.append(p)
     else:
         base = os.path.expanduser("~")
-        for sub in [os.path.join(".config", "Trae")]:
-            p = os.path.join(base, sub)
-            if os.path.isdir(p) and is_valid_trae_dir(p):
-                candidates.append(p)
-    # 始终包含默认目录作为兜底
-    if os.path.isdir(DATA_DIR_DEFAULT) and DATA_DIR_DEFAULT not in candidates:
-        candidates.append(DATA_DIR_DEFAULT)
+        p = os.path.join(base, ".config", dir_name)
+        if os.path.isdir(p) and is_valid_trae_dir(p):
+            candidates.append(p)
     return candidates
 
 
@@ -1178,6 +1208,7 @@ class MainApp(ctk.CTk):
         super().__init__(fg_color=BG)
         self.title(APP_TITLE)
         self.current_dir: Optional[str] = None
+        self.current_variant: str = "international"  # 默认 Trae 国际版
         self.license_data: Optional[Dict] = None
         self.offline_mode: bool = False
         self.client = LicenseClient()
@@ -1435,17 +1466,19 @@ class MainApp(ctk.CTk):
         ).place(relx=0.02, rely=0.5, anchor="w")
 
         # ── 2b. 左列：数据目录 + 当前状态 ──
+        # 数据目录卡片 weight=2（偏高），当前状态卡片 weight=1（偏小）
         left_col = ctk.CTkFrame(content, fg_color="transparent")
         left_col.grid(row=2, column=0, sticky="nsew", padx=(0, 6))
-        left_col.grid_rowconfigure(1, weight=1)
+        left_col.grid_rowconfigure(0, weight=2, minsize=240)  # 数据目录卡片
+        left_col.grid_rowconfigure(1, weight=1, minsize=120)  # 当前状态卡片
         left_col.grid_columnconfigure(0, weight=1)
 
         # 左-1: 数据目录卡片
         dir_card = ctk.CTkFrame(left_col, fg_color=BG_CARD, corner_radius=8,
                                 border_width=1, border_color=BORDER)
-        dir_card.grid(row=0, column=0, sticky="ew", pady=(0, 6))
+        dir_card.grid(row=0, column=0, sticky="nsew", pady=(0, 6))
         dir_inner = ctk.CTkFrame(dir_card, fg_color="transparent")
-        dir_inner.pack(fill="x", padx=14, pady=10)
+        dir_inner.pack(fill="both", expand=True, padx=14, pady=10)
 
         dir_title_row = ctk.CTkFrame(dir_inner, fg_color="transparent")
         dir_title_row.pack(fill="x", pady=(0, 8))
@@ -1453,8 +1486,23 @@ class MainApp(ctk.CTk):
                      font=ctk.CTkFont(family=FONT_UI, size=14, weight="bold"),
                      text_color=FG).pack(side="left")
 
+        # ── 版本切换 SegmentedButton ──
+        variant_row = ctk.CTkFrame(dir_inner, fg_color="transparent")
+        variant_row.pack(fill="x", pady=(0, 8))
+        self.variant_seg = ctk.CTkSegmentedButton(
+            variant_row,
+            values=["Trae 国际版", "Trae CN", "TraeSolo CN"],
+            command=self._on_variant_seg_change,
+            font=ctk.CTkFont(family=FONT_UI, size=12, weight="bold"),
+            fg_color=BTN_PRIMARY_S, selected_color=BTN_PRIMARY_E,
+            selected_hover_color=BTN_PRIMARY_E, text_color=FG_WHITE,
+            unselected_color=GHOST, unselected_hover_color=GHOST_H,
+            corner_radius=6, height=30)
+        self.variant_seg.set("Trae 国际版")
+        self.variant_seg.pack(fill="x")
+
         dir_row = ctk.CTkFrame(dir_inner, fg_color="transparent")
-        dir_row.pack(fill="x")
+        dir_row.pack(fill="x", pady=(8, 0))
         self.dir_combobox = ctk.CTkComboBox(
             dir_row, values=["点击右侧刷新"], width=260,
             font=ctk.CTkFont(family=FONT_MONO, size=12),
@@ -1492,7 +1540,7 @@ class MainApp(ctk.CTk):
                          border_width=1, border_color=BORDER)
         sc.grid(row=1, column=0, sticky="nsew")
         si = ctk.CTkFrame(sc, fg_color="transparent")
-        si.pack(fill="both", expand=True, padx=14, pady=10)
+        si.pack(fill="both", expand=True, padx=14, pady=8)
 
         st_top = ctk.CTkFrame(si, fg_color="transparent")
         st_top.pack(fill="x", pady=(0, 6))
@@ -1509,7 +1557,7 @@ class MainApp(ctk.CTk):
         for key, txt in [("mid", "Machine ID"),
                          ("did", "Dev Device ID")]:
             row = ctk.CTkFrame(si, fg_color="transparent")
-            row.pack(fill="x", pady=4)
+            row.pack(fill="x", pady=3)
             ctk.CTkLabel(row, text=f"{txt}:", width=120, anchor="w",
                          font=ctk.CTkFont(family=FONT_UI, size=13),
                          text_color=FG_DIM).pack(side="left")
@@ -1916,12 +1964,50 @@ class MainApp(ctk.CTk):
 
     # ─── 按钮回调 ─────────────────────────────────────────────
 
+    # SegmentedButton 显示文本 → variant key 映射
+    _VARIANT_TEXT_TO_KEY = {
+        "Trae 国际版": "international",
+        "Trae CN": "cn",
+        "TraeSolo CN": "solo",
+    }
+    _VARIANT_KEY_TO_LABEL = {
+        "international": "Trae 国际版",
+        "cn": "Trae CN",
+        "solo": "TraeSolo CN",
+    }
+
+    def _on_variant_seg_change(self, text: str):
+        """SegmentedButton 回调：切换版本并自动检测"""
+        variant = self._VARIANT_TEXT_TO_KEY.get(text, "international")
+        self.current_variant = variant
+        variant_label = self._VARIANT_KEY_TO_LABEL.get(variant, text)
+        self._log(f"切换到: {variant_label}", "dim")
+        # 切换版本后自动检测
+        self._on_auto_detect()
+
+    def _on_variant_change(self, variant: str):
+        """版本切换按钮回调（保留兼容）"""
+        self.current_variant = variant
+        variant_label = self._VARIANT_KEY_TO_LABEL.get(variant, variant)
+        self._log(f"切换到: {variant_label}", "dim")
+        # 同步 SegmentedButton 选中态
+        try:
+            self.variant_seg.set(variant_label)
+        except Exception:
+            pass
+        # 切换版本后自动检测
+        self._on_auto_detect()
+
     def _on_auto_detect(self, silent=False):
-        candidates = auto_detect_trae_dirs()
+        variant = getattr(self, "current_variant", "international")
+        candidates = auto_detect_trae_dirs(variant)
+        variant_label = {"international": "Trae 国际版",
+                          "cn": "Trae CN",
+                          "solo": "TraeSolo CN"}[variant]
         if not candidates:
             if not silent:
-                self._log("未检测到任何 Trae 目录", "warn")
-                self._log(f"请点击「手动选择」指定目录（通常位于 {DIR_HINT}）", "warn")
+                self._log(f"未检测到 {variant_label} 的数据目录", "warn")
+                self._log(f"请点击「手动选择」指定目录", "warn")
             self.dir_combobox.configure(values=["（未检测到）"])
             self.dir_combobox.set("（未检测到，请手动选择）")
             return
@@ -1933,12 +2019,12 @@ class MainApp(ctk.CTk):
         self.current_dir = first
         self.dir_label.configure(text=first, text_color=FG)
         if not silent:
-            self._log(f"检测到 {len(candidates)} 个候选目录，已自动选中：")
+            self._log(f"[{variant_label}] 检测到 {len(candidates)} 个候选目录：")
             for i, p in enumerate(candidates, 1):
                 self._log(f"  {i}. {p}", "dim")
             self._log(f"已选择: {first}", "ok")
         else:
-            self._log(f"已自动检测: {first}", "ok")
+            self._log(f"已自动检测 [{variant_label}]: {first}", "ok")
         self._do_refresh(silent=True)
 
     def _on_combobox_select(self, value: str):
