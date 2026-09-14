@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# dist 目录里的本地构建产物不提交（CI 产物会单独下载到此处）
+dist/*.exe
+dist/*.dll
+dist/*.pyd
+
+# Virtual env
+venv/
+env/
+.venv/
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Nuitka build
+*.onefile-build/
+*.dist/
+*.build/
+
+# PyInstaller
+*.spec
+
+# Local test artifacts
+*.bak
+license.dat
+config.json
+
+# Logs
+*.log
+
+# Temporary
+tmp/
+temp/
